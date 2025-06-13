@@ -1,0 +1,12 @@
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5432/bank_db
+    username: postgres
+    password: secret
+  jpa:
+    hibernate:
+      ddl-auto: update   # usa migrations in produzione
+    open-in-view: false
+    show-sql: true
+server:
+  port: 8080

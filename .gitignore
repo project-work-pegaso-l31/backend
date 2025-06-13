@@ -1,0 +1,70 @@
+###############################################################################
+# Java / Maven – Spring Boot backend
+###############################################################################
+
+## --- Compilati & artefatti --------------------------------------------------
+*.class
+*.jar
+*.war
+*.ear
+*.nar
+*.zip
+*.tar.gz
+*.rar
+
+## --- Maven -------------------------------------------------------------------
+# cartella di output
+/target/
+# Maven Wrapper JAR (teniamo gli script, non il binario)
+.mvn/wrapper/maven-wrapper.jar
+
+## --- Log & crash -------------------------------------------------------------
+*.log
+hs_err_pid*
+replay_pid*
+
+## --- IDE / Editor ------------------------------------------------------------
+### IntelliJ IDEA ###
+.idea/
+*.iws
+*.iml
+*.ipr
+# cartella out/ per progetti legacy
+/out/
+
+### VS Code ###
+.vscode/
+
+### Eclipse / Spring Tools Suite ###
+.classpath
+.project
+.settings/
+.apt_generated/
+.factorypath
+.springBeans/
+.sts4-cache/
+
+### NetBeans ###
+/nbbuild/
+/dist/
+/nbdist/
+/nbproject/private/
+/.nb-gradle/
+
+## --- Strumenti build alternativi --------------------------------------------
+build/                 # output Gradle / Ant
+!**/src/main/**/build/
+!**/src/test/**/build/
+
+## --- Report, coverage, Sonar -------------------------------------------------
+/jacoco.exec
+/coverage/
+.sonar/
+
+## --- File di sistema ---------------------------------------------------------
+.DS_Store           # macOS
+Thumbs.db           # Windows
+
+###############################################################################
+# Fine
+###############################################################################
