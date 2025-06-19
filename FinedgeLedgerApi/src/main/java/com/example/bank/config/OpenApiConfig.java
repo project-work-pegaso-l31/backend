@@ -9,7 +9,7 @@ import org.springframework.context.annotation.Configuration;
         info = @Info(
                 title = "FinEdge Ledger API",
                 version = "0.1.0",
-                description = "Gestione clienti, conti correnti e transazioni"
+                description = "Backend demo in-memory per gestione clienti, conti e movimenti"
         )
 )
-public class OpenApiConfig { /* solo meta – niente codice */ }
+public class OpenApiConfig { }     // solo metadata

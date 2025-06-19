@@ -2,19 +2,18 @@ package com.example.bank.service;
 
 import com.example.bank.domain.Account;
 import com.example.bank.domain.Customer;
-import com.example.bank.dto.AccountDTO;
-import com.example.bank.dto.CreateAccountDTO;
+import com.example.bank.dto.*;
 import com.example.bank.exception.NotFoundException;
 import com.example.bank.repository.AccountRepository;
 import com.example.bank.repository.CustomerRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
+import java.util.List;
 import java.util.UUID;
 
 @Service
-@Transactional
 @RequiredArgsConstructor
 public class AccountService {
 
@@ -25,13 +24,17 @@ public class AccountService {
         Customer c = customerRepo.findById(dto.customerId())
                 .orElseThrow(() -> new NotFoundException("Customer"));
 
+        accountRepo.findByIban(dto.iban()).ifPresent(a -> {
+            throw new IllegalArgumentException("IBAN già esistente");
+        });
+
         Account a = Account.builder()
                 .iban(dto.iban())
-                .customer(c)
+                .balance(BigDecimal.ZERO)
+                .customerId(c.getId())
                 .build();
 
-        accountRepo.save(a);
-        return toDto(a);
+        return toDto(accountRepo.save(a));
     }
 
     public AccountDTO get(UUID id) {
@@ -40,8 +43,11 @@ public class AccountService {
         return toDto(a);
     }
 
-    /* -------- Mapper interno semplice -------- */
+    public List<AccountDTO> listByCustomer(UUID customerId) {
+        return accountRepo.findByCustomer(customerId).stream().map(this::toDto).toList();
+    }
+
     private AccountDTO toDto(Account a) {
-        return new AccountDTO(a.getId(), a.getIban(), a.getBalance(), a.getCustomer().getId());
+        return new AccountDTO(a.getId(), a.getIban(), a.getBalance(), a.getCustomerId());
     }
 }

@@ -1,11 +1,24 @@
 package com.example.bank.repository;
 
 import com.example.bank.domain.Transaction;
-import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Component;
 
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 
-public interface TransactionRepository extends JpaRepository<Transaction, UUID> {
-    List<Transaction> findByAccount_Id(UUID accountId);   // lista movimenti per conto
+@Component
+public class TransactionRepository {
+    private final Map<UUID, Transaction> store = new ConcurrentHashMap<>();
+
+    public Transaction save(Transaction t) {
+        if (t.getId() == null) t.setId(UUID.randomUUID());
+        store.put(t.getId(), t);
+        return t;
+    }
+
+    public List<Transaction> findByAccount(UUID accountId) {
+        return store.values().stream()
+                .filter(t -> t.getAccountId().equals(accountId))
+                .toList();
+    }
 }

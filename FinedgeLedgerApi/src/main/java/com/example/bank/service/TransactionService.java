@@ -8,14 +8,13 @@ import com.example.bank.repository.AccountRepository;
 import com.example.bank.repository.TransactionRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 
 @Service
-@Transactional
 @RequiredArgsConstructor
 public class TransactionService {
 
@@ -23,40 +22,45 @@ public class TransactionService {
     private final AccountRepository accountRepo;
 
     public TransactionDTO credit(UUID accountId, BigDecimal amount, String description) {
-        return createTx(accountId, amount, description, Transaction.Type.CREDIT);
+        return append(accountId, amount.abs(), Transaction.Type.CREDIT, description);
     }
 
     public TransactionDTO debit(UUID accountId, BigDecimal amount, String description) {
-        return createTx(accountId, amount.negate(), description, Transaction.Type.DEBIT);
+        return append(accountId, amount.abs(), Transaction.Type.DEBIT, description);
     }
 
     public List<TransactionDTO> listByAccount(UUID accountId) {
-        return txRepo.findByAccount_Id(accountId).stream().map(this::toDto).toList();
+        return txRepo.findByAccount(accountId).stream().map(this::toDto).toList();
     }
 
-    /* --------- Interni --------- */
-    private TransactionDTO createTx(UUID accountId, BigDecimal amount,
-                                    String description, Transaction.Type type) {
+    /* ------------------- private helpers ------------------- */
+
+    private TransactionDTO append(UUID accountId, BigDecimal amount,
+                                  Transaction.Type type, String description) {
 
         Account acc = accountRepo.findById(accountId)
                 .orElseThrow(() -> new NotFoundException("Account"));
 
-        /* aggiorna saldo */
-        acc.setBalance(acc.getBalance().add(amount));
+        BigDecimal signed = (type == Transaction.Type.CREDIT) ? amount : amount.negate();
+        acc.setBalance(acc.getBalance().add(signed));
+        accountRepo.save(acc);           // persiste nuovo saldo
 
         Transaction tx = Transaction.builder()
-                .amount(amount.abs())
+                .accountId(accountId)
+                .amount(amount)
                 .type(type)
                 .description(description)
-                .account(acc)
+                .createdAt(LocalDateTime.now())
                 .build();
-        txRepo.save(tx);
-        return toDto(tx);
+
+        return toDto(txRepo.save(tx));
     }
 
-    private TransactionDTO toDto(Transaction t){
+    private TransactionDTO toDto(Transaction t) {
         return new TransactionDTO(
-                t.getId(), t.getAmount(), t.getType().name(),
-                t.getDescription(), t.getCreatedAt(), t.getAccount().getId());
+                t.getId(), t.getAccountId(), t.getAmount(),
+                t.getType().name(), t.getDescription(),
+                t.getCreatedAt().toString()
+        );
     }
 }
