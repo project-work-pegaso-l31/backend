@@ -30,7 +30,15 @@ public class TransactionService {
     }
 
     public List<TransactionDTO> listByAccount(UUID accountId) {
-        return txRepo.findByAccount(accountId).stream().map(this::toDto).toList();
+        // 1️⃣ verifica che il conto esista
+        accountRepo.findById(accountId)
+                .orElseThrow(() -> new NotFoundException("Account"));
+
+        // 2️⃣ restituisce i movimenti, se ce ne sono
+        return txRepo.findByAccount(accountId)
+                .stream()
+                .map(this::toDto)
+                .toList();
     }
 
     /* ------------------- private helpers ------------------- */

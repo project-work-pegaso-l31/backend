@@ -3,6 +3,7 @@ package com.example.bank.controller;
 import com.example.bank.dto.TransactionDTO;
 import com.example.bank.service.TransactionService;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.constraints.Positive;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
@@ -22,7 +23,7 @@ public class TransactionController {
     @PostMapping("/{accountId}/credit")
     @ResponseStatus(HttpStatus.CREATED)
     public TransactionDTO credit(@PathVariable UUID accountId,
-                                 @RequestParam BigDecimal amount,
+                                 @Positive @RequestParam BigDecimal amount,
                                  @RequestParam(required = false) String description) {
         return service.credit(accountId, amount, description);
     }
@@ -30,7 +31,7 @@ public class TransactionController {
     @PostMapping("/{accountId}/debit")
     @ResponseStatus(HttpStatus.CREATED)
     public TransactionDTO debit(@PathVariable UUID accountId,
-                                @RequestParam BigDecimal amount,
+                                @Positive @RequestParam BigDecimal amount,
                                 @RequestParam(required = false) String description) {
         return service.debit(accountId, amount, description);
     }
