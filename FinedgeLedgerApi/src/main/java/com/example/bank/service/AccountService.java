@@ -1,11 +1,11 @@
 package com.example.bank.service;
 
 import com.example.bank.domain.Account;
-import com.example.bank.domain.Customer;
-import com.example.bank.dto.*;
+import com.example.bank.dto.AccountDTO;
+import com.example.bank.dto.CreateAccountDTO;
 import com.example.bank.exception.NotFoundException;
 import com.example.bank.repository.AccountRepository;
-import com.example.bank.repository.CustomerRepository;
+import com.example.bank.util.IbanGenerator;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -18,36 +18,53 @@ import java.util.UUID;
 public class AccountService {
 
     private final AccountRepository accountRepo;
-    private final CustomerRepository customerRepo;
 
+    /* ------------------------------------------------------------------ */
+
+    /** Apre un nuovo conto con IBAN generato automaticamente. */
     public AccountDTO openAccount(CreateAccountDTO dto) {
-        Customer c = customerRepo.findById(dto.customerId())
-                .orElseThrow(() -> new NotFoundException("Customer"));
 
-        accountRepo.findByIban(dto.iban()).ifPresent(a -> {
-            throw new IllegalArgumentException("IBAN già esistente");
-        });
+        // 1) genera IBAN finché non esiste già
+        String iban;
+        do {
+            iban = IbanGenerator.newItalian();
+        } while (accountRepo.findByIban(iban).isPresent());
 
-        Account a = Account.builder()
-                .iban(dto.iban())
+        // 2) crea entità
+        Account account = Account.builder()
+                .customerId(dto.customerId())
+                .iban(iban)
                 .balance(BigDecimal.ZERO)
-                .customerId(c.getId())
                 .build();
 
-        return toDto(accountRepo.save(a));
+        accountRepo.save(account);
+        return toDTO(account);
     }
 
+    /** Ritorna un singolo conto. */
     public AccountDTO get(UUID id) {
-        Account a = accountRepo.findById(id)
-                .orElseThrow(() -> new NotFoundException("Account"));
-        return toDto(a);
+        return accountRepo.findById(id)
+                .map(this::toDTO)
+                .orElseThrow(() -> new NotFoundException("Account non trovato"));
     }
 
+    /** Elenco conti di un cliente. */
     public List<AccountDTO> listByCustomer(UUID customerId) {
-        return accountRepo.findByCustomer(customerId).stream().map(this::toDto).toList();
+        return accountRepo.findByCustomerId(customerId)
+                .stream()
+                .map(this::toDTO)
+                .toList();
     }
 
-    private AccountDTO toDto(Account a) {
-        return new AccountDTO(a.getId(), a.getIban(), a.getBalance(), a.getCustomerId());
+    /* ---------- helper di mapping ------------------------------------- */
+
+    private AccountDTO toDTO(Account a) {
+        return new AccountDTO(
+                a.getId(),
+                a.getIban(),
+                a.getBalance(),
+                a.getCustomerId()   // ⬅︎ 4° argomento
+        );
     }
+
 }

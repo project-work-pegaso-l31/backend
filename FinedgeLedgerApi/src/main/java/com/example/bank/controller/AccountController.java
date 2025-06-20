@@ -14,6 +14,7 @@ import java.util.UUID;
 @Tag(name = "Accounts")
 @RestController
 @RequestMapping("/api/accounts")
+@CrossOrigin(origins = "http://localhost:5173")
 @RequiredArgsConstructor
 public class AccountController {
 

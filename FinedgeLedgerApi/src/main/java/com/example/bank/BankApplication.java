@@ -12,37 +12,38 @@ import org.springframework.context.annotation.Bean;
 
 import java.math.BigDecimal;
 
-@SpringBootApplication(
-		exclude = {  // -- resta per evitare JPA
-				org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration.class,
-				org.springframework.boot.autoconfigure.orm.jpa.HibernateJpaAutoConfiguration.class
-		})
+@SpringBootApplication
 public class BankApplication {
 
 	public static void main(String[] args) {
 		SpringApplication.run(BankApplication.class, args);
 	}
 
-	/** Inizializza 1 cliente, 1 conto e 2 movimenti */
+	/**
+	 * Seeder: inserisce un cliente, un conto e due transazioni demo
+	 * ad ogni avvio (dati in‐memory).
+	 */
 	@Bean
-	CommandLineRunner seed(CustomerService customerSvc,
-						   AccountService accountSvc,
+	CommandLineRunner seed(CustomerService   customerSvc,
+						   AccountService    accountSvc,
 						   TransactionService txSvc) {
+
 		return args -> {
-			// 1. cliente
+			/* 1. Cliente demo ------------------------------------------------ */
 			var mario = customerSvc.create(
-					new CreateCustomerDTO("Mario Rossi",
-							"mario.rossi@example.com",
-							"RSSMRA80A01H501U"));
+					new CreateCustomerDTO(
+							"Mario Rossi",
+							"mario@mail.it",
+							"RSSMRA80A01H501U"
+					));
 
-			// 2. conto
+			/* 2. Conto demo (IBAN generato automaticamente) ----------------- */
 			var conto = accountSvc.openAccount(
-					new CreateAccountDTO(mario.id(),
-							"IT60X0542811101000000123456"));
+					new CreateAccountDTO(mario.id()));
 
-			// 3. accredito + addebito
-			txSvc.credit(conto.id(), new BigDecimal("1500.00"), "stipendio");
-			txSvc.debit(conto.id(),  new BigDecimal("200.00"),  "bolletta");
+			/* 3. Movimenti demo --------------------------------------------- */
+			txSvc.credit(conto.id(), new BigDecimal("1000.00"), "Primo deposito");
+			txSvc.debit (conto.id(), new BigDecimal("150.00"),  "Pagamento bolletta");
 		};
 	}
 }
