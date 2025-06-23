@@ -1,98 +1,74 @@
 package com.example.bank.service;
 
-import com.example.bank.domain.Account;
 import com.example.bank.domain.Transaction;
-import com.example.bank.domain.Transaction.Type;
+import com.example.bank.domain.Account;
 import com.example.bank.dto.TransactionDTO;
+import com.example.bank.exception.InsufficientFundsException;
 import com.example.bank.exception.NotFoundException;
 import com.example.bank.repository.AccountRepository;
 import com.example.bank.repository.TransactionRepository;
-import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
-import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.UUID;
 
 @Service
-@RequiredArgsConstructor
 public class TransactionService {
 
     private final TransactionRepository txRepo;
-    private final AccountRepository     accountRepo;
+    private final AccountRepository accRepo;
 
-    /* ───── CREDIT ───── */
-    public TransactionDTO credit(UUID accountId,
-                                 BigDecimal amount,
-                                 String description) {
-
-        Account account = accountRepo.findById(accountId)
-                .orElseThrow(() -> new NotFoundException("Account non trovato"));
-
-        if (amount.compareTo(BigDecimal.ZERO) <= 0)
-            throw new IllegalArgumentException("Importo deve essere positivo");
-
-        account.setBalance(account.getBalance().add(amount));
-
-        Transaction tx = Transaction.builder()
-                .accountId(accountId)
-                .amount(amount)
-                .type(Type.CREDIT)
-                .description(description)
-                .createdAt(LocalDateTime.now().truncatedTo(ChronoUnit.SECONDS))
-                .build();
-
-        txRepo.save(tx);
-        return toDTO(tx);
+    public TransactionService(TransactionRepository txRepo, AccountRepository accRepo) {
+        this.txRepo = txRepo;
+        this.accRepo = accRepo;
     }
 
-    /* ───── DEBIT ───── */
-    public TransactionDTO debit(UUID accountId,
-                                BigDecimal amount,
-                                String description) {
-
-        Account account = accountRepo.findById(accountId)
-                .orElseThrow(() -> new NotFoundException("Account non trovato"));
-
-        if (amount.compareTo(BigDecimal.ZERO) <= 0)
-            throw new IllegalArgumentException("Importo deve essere positivo");
-
-        if (account.getBalance().compareTo(amount) < 0)
-            throw new IllegalArgumentException("Saldo insufficiente");
-
-        account.setBalance(account.getBalance().subtract(amount));
-
-        Transaction tx = Transaction.builder()
-                .accountId(accountId)
-                .amount(amount.negate())
-                .type(Type.DEBIT)
-                .description(description)
-                .createdAt(LocalDateTime.now().truncatedTo(ChronoUnit.SECONDS))
-                .build();
-
-        txRepo.save(tx);
-        return toDTO(tx);
+    /* ------------------------------------------------------------ */
+    public TransactionDTO credit(UUID accountId, BigDecimal amount, String description) {
+        return move(accountId, amount, description, Transaction.Type.CREDIT);
     }
 
-    /* ───── LIST ───── */
+    public TransactionDTO debit(UUID accountId, BigDecimal amount, String description) {
+        return move(accountId, amount.negate(), description, Transaction.Type.DEBIT);
+    }
+
+    /* ------------------------------------------------------------ */
     public List<TransactionDTO> listByAccount(UUID accountId) {
-        return txRepo.findByAccount(accountId)
-                .stream()
-                .map(this::toDTO)
+        return txRepo.findByAccount(accountId).stream()
+                .map(TransactionService::toDTO)
                 .toList();
     }
 
-    /* ───── MAPPING ───── */
-    private TransactionDTO toDTO(Transaction t) {
+    /* ------------------------------------------------------------ */
+    private TransactionDTO move(UUID id, BigDecimal delta, String desc, Transaction.Type type) {
+
+        Account account = accRepo.findById(id)
+                .orElseThrow(() -> new NotFoundException("Conto non trovato"));
+
+        BigDecimal newBal = account.getBalance().add(delta);
+
+        if (newBal.compareTo(BigDecimal.ZERO) < 0)
+            throw new InsufficientFundsException("Saldo insufficiente");
+
+        account.setBalance(newBal);
+        accRepo.save(account);
+
+        Transaction tx = txRepo.save(Transaction.builder()
+                .accountId(id)
+                .amount(delta)
+                .description(desc)
+                .type(type)
+                .createdAt(LocalDateTime.now())
+                .build());
+
+        return toDTO(tx);
+    }
+
+    private static TransactionDTO toDTO(Transaction t) {
         return new TransactionDTO(
-                t.getId(),
-                t.getAccountId(),
-                t.getAmount(),
-                t.getType().name(),
-                t.getDescription(),
-                t.getCreatedAt().toString()
-        );
+                t.getId(), t.getAccountId(), t.getAmount(),
+                t.getType().name(), t.getDescription(), t.getCreatedAt().toString());
     }
 }
