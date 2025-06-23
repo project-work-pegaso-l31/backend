@@ -1,14 +1,23 @@
 package com.example.bank.dto;
 
-import jakarta.validation.constraints.Email;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.Pattern;
+import jakarta.validation.constraints.*;
 
 /**
- * Payload in ingresso per creare un nuovo cliente.
+ * DTO di creazione cliente.
  */
 public record CreateCustomerDTO(
-        @NotBlank String fullName,
-        @Email String email,
-        @Pattern(regexp = "\\w{16}") String fiscalCode     // 16 caratteri alfanumerici
+
+        @NotBlank(message = "Nome obbligatorio")
+        String fullName,
+
+        @Email(message = "Email non valida")
+        String email,
+
+        // Codice fiscale italiano: 16 caratteri alfanumerici (regex semplificata)
+        @Pattern(
+                regexp = "^[A-Z]{6}[0-9]{2}[A-Z][0-9]{2}[A-Z][0-9]{3}[A-Z]$",
+                flags = Pattern.Flag.CASE_INSENSITIVE,
+                message = "Codice fiscale non valido"
+        )
+        String fiscalCode
 ) { }
