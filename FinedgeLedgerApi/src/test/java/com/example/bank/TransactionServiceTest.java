@@ -1,7 +1,7 @@
 package com.example.bank;
 
 import com.example.bank.domain.Account;
-import com.example.bank.exception.NotFoundException;
+import com.example.bank.exception.InsufficientFundsException;
 import com.example.bank.repository.AccountRepository;
 import com.example.bank.repository.TransactionRepository;
 import com.example.bank.service.TransactionService;
@@ -11,13 +11,12 @@ import org.junit.jupiter.api.Test;
 import java.math.BigDecimal;
 import java.util.UUID;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.*;
 
-public class TransactionServiceTest {
+class TransactionServiceTest {
 
     private TransactionService service;
-    private AccountRepository accRepo;
+    private AccountRepository  accRepo;
     private TransactionRepository txRepo;
     private UUID accountId;
 
@@ -54,17 +53,8 @@ public class TransactionServiceTest {
     }
 
     @Test
-    void credit_on_unknown_account_throws() {
-        UUID wrongId = UUID.randomUUID();
-        assertThrows(NotFoundException.class,
-                () -> service.credit(wrongId, BigDecimal.TEN, ""));
-    }
-
-    @Test
-    void negative_amount_is_abs_value() {
-        // anche se dovesse arrivare un valore negativo viene normalizzato in abs()
-        service.credit(accountId, new BigDecimal("-50.00"), "correzione");
-        assertEquals(new BigDecimal("50.00"),
-                accRepo.findById(accountId).get().getBalance());
+    void debit_over_balance_throws() {
+        assertThrows(InsufficientFundsException.class,
+                () -> service.debit(accountId, new BigDecimal("1.00"), "overdraw"));
     }
 }

@@ -1,0 +1,74 @@
+{
+  "customers": [
+    {
+      "fullName": "Mario Rossi",
+      "email": "mario.rossi@mail.it",
+      "fiscalCode": "RSSMRA75A01H501U",
+      "accounts": [
+        {
+          "iban": "IT60X0542811101000000123456",
+          "movements": [
+            { "amount": 1000, "type": "CREDIT", "desc": "Primo deposito",   "at": "2025-01-15T09:30:00" },
+            { "amount": -150, "type": "DEBIT",  "desc": "Bolletta",        "at": "2025-02-02T14:10:00" }
+          ]
+        }
+      ]
+    },
+    {
+      "fullName": "Giulia Bianchi",
+      "email": "giulia.bianchi@mail.it",
+      "fiscalCode": "BNCGLI80B41F205K",
+      "accounts": [
+        {
+          "iban": "IT22M1234512345123456789011",
+          "movements": [
+            { "amount": 800,  "type": "CREDIT", "desc": "Stipendio Gen",   "at": "2025-01-28T08:00:00" },
+            { "amount": -90,  "type": "DEBIT",  "desc": "Netflix annuale", "at": "2025-02-01T12:00:00" },
+            { "amount": 820,  "type": "CREDIT", "desc": "Stipendio Feb",   "at": "2025-02-27T08:00:00" }
+          ]
+        },
+        {
+          "iban": "IT97Z0760105138251209456782",
+          "movements": [
+            { "amount": 2000, "type": "CREDIT", "desc": "Versamento",      "at": "2025-03-05T10:00:00" }
+          ]
+        }
+      ]
+    },
+    {
+      "fullName": "Luca Verdi",
+      "email": "luca.verdi@mail.it",
+      "fiscalCode": "VRDLGU90C11H501T",
+      "accounts": [
+        {
+          "iban": "IT32A0300203280123456789012",
+          "movements": [
+            { "amount": 1500, "type":"CREDIT","desc":"Primo deposito","at":"2025-04-10T11:00:00"},
+            { "amount": -300,"type":"DEBIT","desc":"Computer","at":"2025-05-02T16:30:00"}
+          ]
+        }
+      ]
+    },
+    {
+      "fullName": "Sara Neri",
+      "email": "sara.neri@mail.it",
+      "fiscalCode": "NRSRAA95D45F205R",
+      "accounts": [
+        {
+          "iban": "IT06Y0503401234000001234567",
+          "movements": [
+            { "amount": 250, "type":"CREDIT","desc":"Regalo","at":"2025-02-14T18:00:00"}
+          ]
+        }
+      ]
+    },
+    {
+      "fullName": "Paolo Blu",
+      "email": "paolo.blu@mail.it",
+      "fiscalCode": "BLUPLO70E12H501E",
+      "accounts": [
+        { "iban": "IT17P0844012340123456789013", "movements": [] }
+      ]
+    }
+  ]
+}
