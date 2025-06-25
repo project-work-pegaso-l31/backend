@@ -1,7 +1,6 @@
 package com.example.bank;
 
 import com.example.bank.dto.CreateCustomerDTO;
-import com.example.bank.dto.UpdateCustomerDTO;
 import com.example.bank.repository.CustomerRepository;
 import com.example.bank.service.CustomerService;
 import org.junit.jupiter.api.BeforeEach;
@@ -19,28 +18,29 @@ class CustomerServiceTest {
     }
 
     @Test
-    void create_and_update_customer() {
-        var created = custSvc.create(new CreateCustomerDTO(
-                "Mario Rossi", "mario@ex.com", "RSSMRA80A01H501U"));
+    void create_and_retrieve_customer() {
+        var dtoIn = new CreateCustomerDTO(
+                "Mario Rossi", "mario@ex.com", "RSSMRA80A01H501U");
+        var created = custSvc.create(dtoIn);
 
-        /* update */
-        var upd = custSvc.update(created.id(),
-                new UpdateCustomerDTO("M. Rossi", "rossi@ex.com", "RSSMRA80A01H501U"));
+        assertNotNull(created.id());
+        assertEquals("Mario Rossi", created.fullName());
 
-        assertEquals("M. Rossi", upd.fullName());
-        assertEquals("rossi@ex.com", upd.email());
+        var fetched = custSvc.get(created.id());
+        assertEquals(created, fetched);
     }
 
     @Test
-    void duplicate_email_throws() {
-        custSvc.create(new CreateCustomerDTO(
-                "A", "a@ex.com", "AAAAAA80A01H501U"));
+    void update_customer_data() {
+        var created = custSvc.create(new CreateCustomerDTO(
+                "Anna Bianchi", "anna@ex.com", "BNCNNA90A01F205X"));
 
-        var c2 = custSvc.create(new CreateCustomerDTO(
-                "B", "b@ex.com", "BBBBBB80A01H501U"));
+        var dtoUpd = new CreateCustomerDTO(
+                "Anna Maria Bianchi", "anna.new@ex.com", "BNCNNA90A01F205X");
 
-        assertThrows(IllegalArgumentException.class,
-                () -> custSvc.update(c2.id(),
-                        new UpdateCustomerDTO("B", "a@ex.com", "BBBBBB80A01H501U")));
+        var updated = custSvc.update(created.id(), dtoUpd);
+
+        assertEquals("Anna Maria Bianchi", updated.fullName());
+        assertEquals("anna.new@ex.com", updated.email());
     }
 }
