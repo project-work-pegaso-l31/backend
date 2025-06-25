@@ -4,7 +4,7 @@ import com.example.bank.domain.Customer;
 import com.example.bank.dto.CreateCustomerDTO;
 import com.example.bank.dto.CustomerDTO;
 import com.example.bank.dto.UpdateCustomerDTO;
-import com.example.bank.exception.NotFoundException;
+import com.example.bank.exception.*;
 import com.example.bank.repository.CustomerRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -21,6 +21,11 @@ public class CustomerService {
     /* ---------- CREATE ---------- */
 
     public CustomerDTO create(CreateCustomerDTO dto) {
+        if (repo.findByFiscalCode(dto.fiscalCode()).isPresent())
+            throw new DuplicateFiscalCodeException("Codice fiscale già registrato");
+        if (repo.findByEmail(dto.email()).isPresent())
+            throw new DuplicateEmailException("Email già registrata");
+
         Customer c = Customer.builder()
                 .id(UUID.randomUUID())
                 .fullName(dto.fullName())
@@ -37,18 +42,28 @@ public class CustomerService {
     }
 
     public CustomerDTO get(UUID id) {
-        return toDTO(repo.findById(id).orElseThrow(() -> new NotFoundException("Cliente non trovato")));
+        return toDTO(repo.findById(id)
+                .orElseThrow(() -> new NotFoundException("Cliente")));
     }
 
     public CustomerDTO getByFiscalCode(String cf) {
         return toDTO(repo.findByFiscalCode(cf)
-                .orElseThrow(() -> new NotFoundException("Cliente non trovato")));
+                .orElseThrow(() -> new NotFoundException("Cliente")));
     }
 
     /* ---------- UPDATE ---------- */
 
     public CustomerDTO update(UUID id, UpdateCustomerDTO dto) {
-        Customer c = repo.findById(id).orElseThrow(() -> new NotFoundException("Cliente non trovato"));
+        Customer c = repo.findById(id)
+                .orElseThrow(() -> new NotFoundException("Cliente"));
+
+        if (!c.getFiscalCode().equalsIgnoreCase(dto.fiscalCode()) &&
+                repo.findByFiscalCode(dto.fiscalCode()).isPresent())
+            throw new DuplicateFiscalCodeException("Codice fiscale già registrato");
+
+        if (!c.getEmail().equalsIgnoreCase(dto.email()) &&
+                repo.findByEmail(dto.email()).isPresent())
+            throw new DuplicateEmailException("Email già registrata");
 
         c.setFullName(dto.fullName());
         c.setEmail(dto.email());

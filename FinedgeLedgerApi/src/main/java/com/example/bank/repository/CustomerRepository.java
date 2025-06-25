@@ -27,11 +27,17 @@ public class CustomerRepository {
         return new ArrayList<>(store.values());
     }
 
-    /* ---------- lookup per CF ---------- */
+    /* ---------- lookup ---------- */
 
     public Optional<Customer> findByFiscalCode(String cf) {
         return store.values().stream()
                 .filter(c -> c.getFiscalCode().equalsIgnoreCase(cf))
+                .findFirst();
+    }
+
+    public Optional<Customer> findByEmail(String mail) {
+        return store.values().stream()
+                .filter(c -> c.getEmail().equalsIgnoreCase(mail))
                 .findFirst();
     }
 }

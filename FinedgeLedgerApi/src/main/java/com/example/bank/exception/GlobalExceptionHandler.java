@@ -11,21 +11,28 @@ import java.util.Map;
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
-    /* ---------------- 404 ---------------- */
+    /* ---------- 404 ---------- */
     @ExceptionHandler(NotFoundException.class)
     @ResponseStatus(HttpStatus.NOT_FOUND)
     public Map<String, String> notFound(NotFoundException ex) {
         return Map.of("error", ex.getMessage());
     }
 
-    /* ----------- saldo insufficiente ----------- */
+    /* ---------- saldo insufficiente ---------- */
     @ExceptionHandler(InsufficientFundsException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public Map<String, String> insufficient(InsufficientFundsException ex) {
         return Map.of("error", ex.getMessage());
     }
 
-    /* ----------- Bean-Validation (body) -------- */
+    /* ---------- duplicati ---------- */
+    @ExceptionHandler({DuplicateEmailException.class, DuplicateFiscalCodeException.class})
+    @ResponseStatus(HttpStatus.CONFLICT)
+    public Map<String, String> duplicate(RuntimeException ex) {
+        return Map.of("error", ex.getMessage());
+    }
+
+    /* ---------- Bean-Validation (body) ---------- */
     @ExceptionHandler(MethodArgumentNotValidException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public Map<String, String> invalidBody(MethodArgumentNotValidException ex) {
@@ -35,7 +42,7 @@ public class GlobalExceptionHandler {
         return Map.of("error", msg);
     }
 
-    /* ----------- Bean-Validation (param / path) -------- */
+    /* ---------- Bean-Validation (param / path) ---------- */
     @ExceptionHandler(ConstraintViolationException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public Map<String, String> invalidParam(ConstraintViolationException ex) {
