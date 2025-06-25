@@ -1,15 +1,17 @@
 package com.example.bank.repository;
 
 import com.example.bank.domain.Transaction;
-import org.springframework.stereotype.Repository;
+import org.springframework.stereotype.Component;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
-@Repository
+@Component
 public class TransactionRepository {
 
     private final Map<UUID, Transaction> store = new ConcurrentHashMap<>();
+
+    /* ---------- CRUD base ---------- */
 
     public Transaction save(Transaction t) {
         if (t.getId() == null) t.setId(UUID.randomUUID());
@@ -17,10 +19,13 @@ public class TransactionRepository {
         return t;
     }
 
-    public List<Transaction> findByAccount(UUID accountId) {
+    public Optional<Transaction> findById(UUID id) {          // <-- AGGIUNTO
+        return Optional.ofNullable(store.get(id));
+    }
+
+    public List<Transaction> findByAccount(UUID accId) {
         return store.values().stream()
-                .filter(t -> t.getAccountId().equals(accountId))
-                .sorted(Comparator.comparing(Transaction::getCreatedAt))
+                .filter(tx -> tx.getAccountId().equals(accId))
                 .toList();
     }
 }

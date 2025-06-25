@@ -15,65 +15,103 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 
+/**
+ * Business-logic per movimenti di conto.
+ */
 @Service
 @RequiredArgsConstructor
 public class TransactionService {
 
     private final TransactionRepository txRepo;
-    private final AccountRepository accRepo;
+    private final AccountRepository     accRepo;
 
-    /* --- API normali (usa now) ------------------------------------------------ */
+    /* ---------------------------------------------------- */
+    /* Controller → usano gli overload “rapidi” (data NOW)  */
+    /* ---------------------------------------------------- */
 
-    public TransactionDTO credit(UUID id, BigDecimal amount, String desc) {
-        return move(id, amount, desc, LocalDateTime.now());
+    public TransactionDTO credit(UUID accountId,
+                                 BigDecimal amount,
+                                 String description) {
+
+        return credit(accountId, amount, description, LocalDateTime.now());
     }
 
-    public TransactionDTO debit(UUID id, BigDecimal amount, String desc) {
-        return move(id, amount.negate(), desc, LocalDateTime.now());
+    public TransactionDTO debit(UUID accountId,
+                                BigDecimal amount,
+                                String description) {
+
+        return debit(accountId, amount, description, LocalDateTime.now());
     }
 
-    /* --- Overload usato dal seeder (timestamp custom) ------------------------ */
+    /* ---------------------------------------------------- */
+    /* Overload completi (data custom) – usati dal seeder   */
+    /* ---------------------------------------------------- */
 
-    public TransactionDTO credit(UUID id, BigDecimal amount, String desc, LocalDateTime at) {
-        return move(id, amount, desc, at);
+    public TransactionDTO credit(UUID accountId,
+                                 BigDecimal amount,
+                                 String description,
+                                 LocalDateTime when) {
+
+        return move(accountId, amount, description, when, Transaction.Type.CREDIT);
     }
 
-    public TransactionDTO debit(UUID id, BigDecimal amount, String desc, LocalDateTime at) {
-        return move(id, amount.negate(), desc, at);
+    public TransactionDTO debit(UUID accountId,
+                                BigDecimal amount,
+                                String description,
+                                LocalDateTime when) {
+
+        return move(accountId, amount, description, when, Transaction.Type.DEBIT);
     }
 
-    /* --- common logic -------------------------------------------------------- */
+    /* ---------------------------------------------------- */
 
-    private TransactionDTO move(UUID accId, BigDecimal delta, String desc, LocalDateTime at) {
-        Account acc = accRepo.findById(accId)
+    private TransactionDTO move(UUID accountId,
+                                BigDecimal amount,
+                                String description,
+                                LocalDateTime when,
+                                Transaction.Type type) {
+
+        Account acc = accRepo.findById(accountId)
                 .orElseThrow(() -> new NotFoundException("Conto non trovato"));
 
-        BigDecimal nuovoSaldo = acc.getBalance().add(delta);
-        if (nuovoSaldo.signum() < 0)
-            throw new InsufficientFundsException("Saldo insufficiente");
+        BigDecimal newBalance = (type == Transaction.Type.CREDIT)
+                ? acc.getBalance().add(amount)
+                : acc.getBalance().subtract(amount);
 
-        acc.setBalance(nuovoSaldo);
+        if (type == Transaction.Type.DEBIT && newBalance.compareTo(BigDecimal.ZERO) < 0) {
+            throw new InsufficientFundsException("Saldo insufficiente");
+        }
+
+        /* aggiorna saldo conto */
+        acc.setBalance(newBalance);
 
         Transaction tx = Transaction.builder()
-                .id(UUID.randomUUID())
-                .accountId(accId)
-                .amount(delta)
-                .type(delta.signum() >= 0 ? Transaction.Type.CREDIT : Transaction.Type.DEBIT)
-                .description(desc == null || desc.isBlank() ? null : desc)
-                .createdAt(at)
+                .accountId(accountId)
+                .amount(type == Transaction.Type.DEBIT ? amount.negate() : amount)
+                .type(type)
+                .description(description)
+                .createdAt(when)
                 .build();
 
-        txRepo.save(tx);
+        txRepo.save(tx);   // persiste movimento
+        accRepo.save(acc); // persiste saldo
+
         return toDTO(tx);
     }
 
-    public List<TransactionDTO> listByAccount(UUID accId) {
-        return txRepo.findByAccount(accId).stream().map(this::toDTO).toList();
+    /* ---------------------------------------------------- */
+    public List<TransactionDTO> listByAccount(UUID accountId) {
+        return txRepo.findByAccount(accountId).stream().map(this::toDTO).toList();
     }
 
     private TransactionDTO toDTO(Transaction t) {
         return new TransactionDTO(
-                t.getId(), t.getAccountId(), t.getAmount(),
-                t.getType().name(), t.getDescription(), t.getCreatedAt().toString());
+                t.getId(),
+                t.getAccountId(),
+                t.getAmount(),
+                t.getType().name(),
+                t.getDescription(),
+                t.getCreatedAt().toString()
+        );
     }
 }

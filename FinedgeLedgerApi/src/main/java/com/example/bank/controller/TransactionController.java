@@ -3,9 +3,7 @@ package com.example.bank.controller;
 import com.example.bank.dto.TransactionDTO;
 import com.example.bank.service.TransactionService;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import jakarta.validation.constraints.Positive;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
 import java.math.BigDecimal;
@@ -15,30 +13,28 @@ import java.util.UUID;
 @Tag(name = "Transactions")
 @RestController
 @RequestMapping("/api/transactions")
-@RequiredArgsConstructor
 @CrossOrigin(origins = "http://localhost:5173")
+@RequiredArgsConstructor
 public class TransactionController {
 
     private final TransactionService service;
 
-    @PostMapping("/{accountId}/credit")
-    @ResponseStatus(HttpStatus.CREATED)
-    public TransactionDTO credit(@PathVariable UUID accountId,
-                                 @Positive @RequestParam BigDecimal amount,
+    @PostMapping("/{accId}/credit")
+    public TransactionDTO credit(@PathVariable UUID accId,
+                                 @RequestParam BigDecimal amount,
                                  @RequestParam(required = false) String description) {
-        return service.credit(accountId, amount, description);
+        return service.credit(accId, amount, description);
     }
 
-    @PostMapping("/{accountId}/debit")
-    @ResponseStatus(HttpStatus.CREATED)
-    public TransactionDTO debit(@PathVariable UUID accountId,
-                                @Positive @RequestParam BigDecimal amount,
+    @PostMapping("/{accId}/debit")
+    public TransactionDTO debit(@PathVariable UUID accId,
+                                @RequestParam BigDecimal amount,
                                 @RequestParam(required = false) String description) {
-        return service.debit(accountId, amount, description);
+        return service.debit(accId, amount, description);
     }
 
-    @GetMapping("/{accountId}")
-    public List<TransactionDTO> list(@PathVariable UUID accountId) {
-        return service.listByAccount(accountId);
+    @GetMapping("/{accId}")
+    public List<TransactionDTO> list(@PathVariable UUID accId) {
+        return service.listByAccount(accId);
     }
 }

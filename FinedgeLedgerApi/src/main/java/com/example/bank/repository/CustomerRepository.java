@@ -11,7 +11,7 @@ public class CustomerRepository {
 
     private final Map<UUID, Customer> store = new ConcurrentHashMap<>();
 
-    /* ---------- CRUD base ---------- */
+    /* ---------- base CRUD ---------- */
 
     public Customer save(Customer c) {
         if (c.getId() == null) c.setId(UUID.randomUUID());
@@ -27,9 +27,9 @@ public class CustomerRepository {
         return new ArrayList<>(store.values());
     }
 
-    /* ---------- NOVITÀ: ricerca per Codice Fiscale ---------- */
+    /* ---------- lookup per CF ---------- */
 
-    public Optional<Customer> findByFiscalCodeIgnoreCase(String cf) {
+    public Optional<Customer> findByFiscalCode(String cf) {
         return store.values().stream()
                 .filter(c -> c.getFiscalCode().equalsIgnoreCase(cf))
                 .findFirst();

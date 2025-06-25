@@ -1,7 +1,9 @@
 package com.example.bank.service;
 
 import com.example.bank.domain.Customer;
-import com.example.bank.dto.*;
+import com.example.bank.dto.CreateCustomerDTO;
+import com.example.bank.dto.CustomerDTO;
+import com.example.bank.dto.UpdateCustomerDTO;
 import com.example.bank.exception.NotFoundException;
 import com.example.bank.repository.CustomerRepository;
 import lombok.RequiredArgsConstructor;
@@ -16,24 +18,53 @@ public class CustomerService {
 
     private final CustomerRepository repo;
 
+    /* ---------- CREATE ---------- */
+
     public CustomerDTO create(CreateCustomerDTO dto) {
         Customer c = Customer.builder()
+                .id(UUID.randomUUID())
                 .fullName(dto.fullName())
                 .email(dto.email())
                 .fiscalCode(dto.fiscalCode())
                 .build();
-        return toDto(repo.save(c));
+        return toDTO(repo.save(c));
+    }
+
+    /* ---------- READ ---------- */
+
+    public List<CustomerDTO> findAll() {
+        return repo.findAll().stream().map(this::toDTO).toList();
     }
 
     public CustomerDTO get(UUID id) {
-        return toDto(repo.findById(id).orElseThrow(() -> new NotFoundException("Customer")));
+        return toDTO(repo.findById(id).orElseThrow(() -> new NotFoundException("Cliente non trovato")));
     }
 
-    public List<CustomerDTO> list() {
-        return repo.findAll().stream().map(this::toDto).toList();
+    public CustomerDTO getByFiscalCode(String cf) {
+        return toDTO(repo.findByFiscalCode(cf)
+                .orElseThrow(() -> new NotFoundException("Cliente non trovato")));
     }
 
-    private CustomerDTO toDto(Customer c) {
-        return new CustomerDTO(c.getId(), c.getFullName(), c.getEmail(), c.getFiscalCode());
+    /* ---------- UPDATE ---------- */
+
+    public CustomerDTO update(UUID id, UpdateCustomerDTO dto) {
+        Customer c = repo.findById(id).orElseThrow(() -> new NotFoundException("Cliente non trovato"));
+
+        c.setFullName(dto.fullName());
+        c.setEmail(dto.email());
+        c.setFiscalCode(dto.fiscalCode());
+
+        return toDTO(repo.save(c));
+    }
+
+    /* ---------- helper ---------- */
+
+    private CustomerDTO toDTO(Customer c) {
+        return new CustomerDTO(
+                c.getId(),
+                c.getFullName(),
+                c.getEmail(),
+                c.getFiscalCode()
+        );
     }
 }
