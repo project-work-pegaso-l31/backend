@@ -1,13 +1,13 @@
 package com.example.bank;
 
 import com.example.bank.dto.CreateCustomerDTO;
+import com.example.bank.dto.UpdateCustomerDTO;
 import com.example.bank.repository.CustomerRepository;
 import com.example.bank.service.CustomerService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.*;
 
 class CustomerServiceTest {
 
@@ -19,15 +19,28 @@ class CustomerServiceTest {
     }
 
     @Test
-    void create_and_retrieve_customer() {
-        var dtoIn = new CreateCustomerDTO(
-                "Mario Rossi", "mario@ex.com", "RSSMRA80A01H501U");
-        var created = custSvc.create(dtoIn);
+    void create_and_update_customer() {
+        var created = custSvc.create(new CreateCustomerDTO(
+                "Mario Rossi", "mario@ex.com", "RSSMRA80A01H501U"));
 
-        assertNotNull(created.id());
-        assertEquals("Mario Rossi", created.fullName());
+        /* update */
+        var upd = custSvc.update(created.id(),
+                new UpdateCustomerDTO("M. Rossi", "rossi@ex.com", "RSSMRA80A01H501U"));
 
-        var fetched = custSvc.get(created.id());
-        assertEquals(created, fetched);
+        assertEquals("M. Rossi", upd.fullName());
+        assertEquals("rossi@ex.com", upd.email());
+    }
+
+    @Test
+    void duplicate_email_throws() {
+        custSvc.create(new CreateCustomerDTO(
+                "A", "a@ex.com", "AAAAAA80A01H501U"));
+
+        var c2 = custSvc.create(new CreateCustomerDTO(
+                "B", "b@ex.com", "BBBBBB80A01H501U"));
+
+        assertThrows(IllegalArgumentException.class,
+                () -> custSvc.update(c2.id(),
+                        new UpdateCustomerDTO("B", "a@ex.com", "BBBBBB80A01H501U")));
     }
 }
